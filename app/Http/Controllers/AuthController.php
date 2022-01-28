@@ -18,10 +18,49 @@ class AuthController extends Controller
             ]
         ]);
     }
-    public function unauthorized() {}
-    public function login() {}
-    public function logout() {}
-    public function refresh() {}
+
+    public function unauthorized() {
+        return response()->json(['error'=>'Não autorizado'], 401);
+    }
+
+    public function login() {
+        $array = ['error' => ''];
+
+        $email = $request->input('email');
+        $password = $request->input('password');
+        
+        if($email && $password) {
+            $token = auth()->attempt([
+                'email' => $email,
+                'password' => $password
+            ]);
+
+            if(!$token) {
+                $array['error'] = 'E-mail e/ou senha errados!';
+                return $array;
+            }
+
+            $array['token'] = $token;
+            return $array;
+        }
+        
+        $array['error'] = 'Dados não enviados!';
+        return $array;
+        
+    }
+
+    public function logout() {
+        auth()->logout();
+        return ['error'=>''];
+    }
+
+    public function refresh() {
+        $token = auth()->refresh();
+        return [
+            'error' => '',
+            'token' => $token
+        ];
+    }
 
     public function create(Request $request) {
 

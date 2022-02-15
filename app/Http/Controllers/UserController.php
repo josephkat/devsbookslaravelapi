@@ -151,4 +151,27 @@ class UserController extends Controller
 
         return $array;
     }
+
+    public function read($id) {
+        $array = ['error' => ''];
+
+        if($id) {
+            $info = User::find($id);
+            if(!$info) {
+                $array['error'] = 'usuário inexistente!';
+                return $array;
+            }
+        } else {
+            $info = $this->loggedUser;
+        }
+
+        $info['avatar'] = url('media/avatars/'.$info['avatar']);
+        $info['cover'] = url('media/covers/'.$info['cover']);
+        
+        $info['me'] = ($info['id'] == $this->loggedUser['id']) ? true : false;
+
+        $array['data'] = $info;
+
+        return $array;
+    }
 }

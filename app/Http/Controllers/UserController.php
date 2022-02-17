@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Http\Facades\Auth;
 use App\Models\User;
+use App\Models\UserRelation;
 use Image;
 
 class UserController extends Controller
@@ -174,4 +175,77 @@ class UserController extends Controller
 
         return $array;
     }
+
+    public function follow($id) {
+        $array = ['error' => ''];
+
+        if($id = $this->loggedUser['id']) {
+            $array['error'] = 'você não pode seguir a você mesmo.';
+            return $array;
+        }
+
+        $userExists = User::find($id);
+        if($userExists){
+
+            $relation = UserRelation::where('user_from', $this->loggedUser['id'])
+            ->where('user_to', $id)
+            ->first();
+
+            if($relation) {
+                // parar de seguir
+                $relation->delete();
+            } else {
+                // seguir
+                $newRelation = new UserRelation();
+                $newRelation->user_from = $this->loggedUser['id'];
+                $newRelation->user_to = $id;
+                $newRelation->save();
+            }
+
+        } else {
+            $array['error'] = 'Usuário inexistente!';
+            return $array;
+        }
+
+        return $array;
+    }
+
+    public function followers($id) {
+        $array = ['error' => ''];
+
+        $userExists = User::find($id);
+        if($userExists){
+            $followers = UserRelation::where('user_to', $id)->get();
+            $followings = UserRelation::where('user_from', $id)->get();
+
+            $array['followers'] = [];
+            $array['followings'] = [];
+
+            foreach($followers as $item) {
+                $user = User::find($item['user_from']);
+                $array['followers'][] = [
+                    'id' => $user['id'],
+                    'name' => $user['name'],
+                    'avatar' => url('media/avatars/'.$user['avatar'])
+                ];
+            }
+
+            foreach($followings as $item) {
+                $user = User::find($item['user_from']);
+                $array['followings'][] = [
+                    'id' => $user['id'],
+                    'name' => $user['name'],
+                    'avatar' => url('media/avatars/'.$user['avatar'])
+                ];
+            }
+
+        } else {
+            $array['error'] = 'Usuário inexistente!';
+            return $array;
+        }
+
+        return $array;
+    }
+
+    public function photos() {}
 }
